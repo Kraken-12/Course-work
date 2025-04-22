@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import time
 import random
-import yaml
+import sqlite3
 
 PAGE_SETTINGS = 'Настройки'
 MAIN_PAGE='ГЛАВНАЯ'
@@ -76,15 +76,39 @@ def mock_parse_flights(from_city, to_city, travel_date):
 
 if current_page == PAGE_SETTINGS:
     st.markdown(F'# {PAGE_SETTINGS}')
-    # st.markdown(F'{username}')
+
     with st.sidebar:
         st.header("Параметры поиска")
-        city_from = st.text_input("Откуда (Город)", )
-        city_to = st.text_input("Куда (Город)", )
-        travel_date = st.date_input("Дата поездки", )
-        if st.button("Сохранить данные",type="primary"):
-            with open('.auth_config.yml', 'w', encoding='utf-8') as file:
-                yaml.dump([city_from,city_to,travel_date], file, default_flow_style=False)
+        city_from = st.text_input("Откуда (Город)")
+        city_to = st.text_input("Куда (Город)")
+        travel_date = st.date_input("Дата поездки")
+        if st.button("Сохранить данные", type="primary"):
+            # Создаем подключение к базе данных
+            conn = sqlite3.connect('settings.db')
+            cursor = conn.cursor()
+            # Создаем таблицу, если она не существует
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS travel_settings (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    city_from TEXT,
+                    city_to TEXT,
+                    travel_date TEXT,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            ''')
+            # Вставляем данные
+            cursor.execute('''
+            INSERT
+            INTO
+            travel_settings(city_from, city_to, travel_date)
+            VALUES(?, ?, ?)
+            ''', (city_from, city_to, str(travel_date)))
+
+            # Сохраняем изменения и закрываем соединение
+            conn.commit()
+            conn.close()
+
+            st.success("Данные успешно сохранены в базу данных!")
     if st.button("Найти варианты", type="primary"):
         with st.spinner("Ищем лучшие варианты..."):
             # Получаем данные (в реальном приложении здесь будет настоящий парсинг)
