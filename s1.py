@@ -67,8 +67,7 @@ class RZDParser:
                 EC.presence_of_element_located(
                     (By.XPATH, "//input[contains(@placeholder, 'ткуда') or contains(@placeholder, 'Откуда')]"))
             )
-            self.driver.execute_script("arguments[0].value = ''; arguments[0].focus();", from_input)
-
+            from_input.send_keys(self.from_station)
             self.wait.until(
                 EC.element_to_be_clickable((By.XPATH, f"//li[contains(., '{self.from_station}')][1]"))
             ).click()
@@ -78,15 +77,12 @@ class RZDParser:
             to_input = self.wait.until(
                 EC.presence_of_element_located((By.XPATH, "//input[contains(@placeholder, 'Куда')]"))
             )
+            time.sleep(0.5)
+            to_input.send_keys(self.to_station)
 
             # Тройная проверка доступности поля
             WebDriverWait(self.driver, 5).until(lambda d: to_input.is_displayed() and to_input.is_enabled())
             self.driver.execute_script("arguments[0].scrollIntoView(true);", to_input)
-
-            # Очистка и ввод с человекообразным поведением
-            self.driver.execute_script("arguments[0].value = '';", to_input)
-            to_input.click()
-            time.sleep(0.5)
 
             # Ожидание и выбор варианта
             time.sleep(0.5)
@@ -99,7 +95,7 @@ class RZDParser:
                 EC.element_to_be_clickable((By.XPATH, "//input[contains(@placeholder, 'Туда')]"))
             )
             date_input.send_keys(self.date)
-            time.sleep(0.5)
+            time.sleep(0.1)
 
             # 4. Поиск
             search_btn = self.wait.until(
@@ -272,29 +268,24 @@ class AVIAParser:
         """Поиск поездов по заданным параметрам"""
         try:
             # 1. Ввод "Откуда"
+            self.driver.execute_script("arguments[0].value = ''; arguments[0].focus();", from_input)
             from_input = self.wait.until(
                 EC.presence_of_element_located(
-                    (By.XPATH, "//input[contains(@placeholder, 'ткуда') or contains(@placeholder, 'Откуда')]"))
+                    (By.XPATH, "//input[contains(@placeholder, 'Откуда') or contains(@placeholder, 'Откуда')]"))
             )
-            self.driver.execute_script("arguments[0].value = ''; arguments[0].focus();", from_input)
-
+            from_input.send_keys(from_station)
             self.wait.until(
                 EC.element_to_be_clickable((By.XPATH, f"//li[contains(., '{self.from_station}')][1]"))
             ).click()
-            time.sleep(0.5)  # Важная пауза после выбора
-
             # 2. Ввод "Куда" с расширенными проверками
             to_input = self.wait.until(
                 EC.presence_of_element_located((By.XPATH, "//input[contains(@placeholder, 'Куда')]"))
             )
-
             # Тройная проверка доступности поля
             WebDriverWait(self.driver, 5).until(lambda d: to_input.is_displayed() and to_input.is_enabled())
             self.driver.execute_script("arguments[0].scrollIntoView(true);", to_input)
 
-            # Очистка и ввод с человекообразным поведением
-            self.driver.execute_script("arguments[0].value = '';", to_input)
-            to_input.click()
+            to_input.send_keys(to_station)
             time.sleep(0.5)
 
             # Ожидание и выбор варианта
@@ -395,7 +386,7 @@ class AVIAParser:
             print(f"Ошибка сохранения: {e}")
             return False
 
-    def run(self, from_station="Москва", to_station="Казань", date="20.02.2025"):
+    def run(self):
         """Основной метод запуска парсера"""
         try:
             print("=== Начало работы парсера AVIASALES ===")
@@ -432,9 +423,9 @@ class AVIAParser:
                 print("Браузер закрыт")
 
 if __name__ == "__main__":
-    from_station="Москва"
-    to_station="Казань"
-    date="20.04.2025"  # Формат: ДД.ММ.ГГГГ
+    from_station="Нижний Новгород"
+    to_station="Владимир"
+    date="30.04.2025"  # Формат: ДД.ММ.ГГГГ
 
     rzd_parser = RZDParser(from_station, to_station, date)
     #aviasales_parser = AviasalesParser(from_city, to_city, date)
